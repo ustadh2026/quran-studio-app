@@ -1,11 +1,13 @@
-const config = {
-  appId: 'com.quranstudio.app',
+import type { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.quranstudio.luganda',
   appName: 'Quran Studio',
-  webDir: 'www',
-  backgroundColor: '#0f172a',
-  server: {
-    androidScheme: 'https'
+  webDir: '.',
+  backgroundColor: '#1E7A4C',
+  android: {
+    allowMixedContent: true
   }
 };
 
-module.exports = config;
+export default config;
