@@ -1,60 +1,45 @@
-name: Build Quran Studio APK
+name: Build APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Show Files - Debug
-        run: |
-          pwd
-          ls -la
-          echo "--- Check package.json ---"
-          ls -la package.json || echo "MISSING package.json in root!"
-          cat package.json || echo "Cannot read package.json"
-
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Setup Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
       - name: Setup Android SDK
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" || true
+        uses: android-actions/setup-android@v3
 
-      - name: Install Dependencies
+      - name: Install deps
         run: npm install
 
-      - name: Prepare Web Folder
+      # --- MAKE PHONE ICON FROM CODE (SVG -> PNG) ---
+      - name: Make Icon From SVG Code
         run: |
-          mkdir -p www
-          cp index.html www/index.html
-          ls -la www/
+          npm install -g @capacitor/assets sharp
+          mkdir -p assets
+          node -e "const sharp=require('sharp'); sharp('assets/icon.svg').png().toFile('assets/icon.png').then(()=>console.log('icon.png made'))"
+          npx @capacitor/assets generate --iconBackgroundColor '#1E7A4C' --iconBackgroundColorDark '#1E7A4C' --splashBackgroundColor '#1E7A4C' --splashBackgroundColorDark '#1E7A4C'
 
-      - name: Add Android Platform
-        run: npx cap add android || echo "Android already exists"
-
-      - name: Sync Web to Android
+      - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build Debug APK
+      - name: Build APK
         run: |
           cd android
           chmod +x gradlew
