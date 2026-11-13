@@ -22,8 +22,8 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      # NO setup-android step here - GitHub runner already has Android SDK
+      # This was the step that was failing with 'tools' error
 
       - name: Install deps
         run: npm install
@@ -40,6 +40,9 @@ jobs:
         run: npx cap sync android
 
       - name: Build APK
+        env:
+          ANDROID_HOME: /usr/lib/android-sdk
+          ANDROID_SDK_ROOT: /usr/lib/android-sdk
         run: |
           cd android
           chmod +x gradlew
