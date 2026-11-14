@@ -22,21 +22,20 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # NO setup-android step here - GitHub runner already has Android SDK
-      # This was the step that was failing with 'tools' error
-
       - name: Install deps
         run: npm install
 
-      # --- MAKE PHONE ICON FROM CODE (SVG -> PNG) ---
       - name: Make Icon From SVG Code
         run: |
           npm install --no-save sharp @capacitor/assets
           mkdir -p assets
           node -e "const sharp=require('sharp'); sharp('assets/icon.svg').png().toFile('assets/icon.png').then(()=>console.log('icon.png made'))"
           npx @capacitor/assets generate --iconBackgroundColor '#1E7A4C' --iconBackgroundColorDark '#1E7A4C' --splashBackgroundColor '#1E7A4C' --splashBackgroundColorDark '#1E7A4C'
-      - name: Sync Capacitor
-        run: npx cap sync android
+
+      - name: Add + Sync Capacitor Android
+        run: |
+          npx cap add android || true
+          npx cap sync android
 
       - name: Build APK
         env:
