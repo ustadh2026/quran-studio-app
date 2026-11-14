@@ -11,46 +11,100 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
-      - name: Install deps
-        run: npm install
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Make Icon From SVG Code
+      - name: Make Icon PNG
         run: |
-          npm install --no-save sharp @capacitor/assets
+          npm install --no-save sharp || true
           mkdir -p assets
-          node -e "const sharp=require('sharp'); sharp('assets/icon.svg').png().toFile('assets/icon.png').then(()=>console.log('icon.png made'))"
-          npx @capacitor/assets generate --iconBackgroundColor '#1E7A4C' --iconBackgroundColorDark '#1E7A4C' --splashBackgroundColor '#1E7A4C' --splashBackgroundColorDark '#1E7A4C'
+          node -e "const sharp=require('sharp'); sharp('assets/icon.svg').png().resize(512,512).toFile('assets/icon.png').then(()=>console.log('icon ok'))" || echo "no svg, keep old png"
 
-      - name: Prepare www folder
+      - name: Build APK from HTML + Manifest
         run: |
-          mkdir -p www
-          cp index.html www/index.html || true
-          cp -r assets www/assets || true
+          mkdir -p app/src/main/assets/www
+          mkdir -p app/src/main/java/com/quranstudio/luganda
+          mkdir -p app/src/main/res/mipmap-xxxhdpi
+          mkdir -p app/src/main/res/values
+          # Copy YOUR real app
+          cp index.html app/src/main/assets/www/index.html
+          cp manifest.json app/src/main/assets/www/manifest.json || true
+          cp -r assets app/src/main/assets/www/assets || true
+          cp assets/icon.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png || true
+          cp assets/icon.png app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png || true
 
-      - name: Add + Sync Capacitor Android
-        run: |
-          npx cap add android || true
-          npx cap sync android
+          # Android Manifest - uses your manifest.json name
+          cat > app/src/main/AndroidManifest.xml <<'XML'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <application android:label="Quran Studio" android:icon="@mipmap/ic_launcher" android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+              <activity android:name=".MainActivity" android:exported="true">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN" />
+                  <category android:name="android.intent.category.LAUNCHER" />
+                </intent-filter>
+              </activity>
+            </application>
+          </manifest>
+          XML
+
+          # MainActivity - JavaScript ON, Touch ON
+          cat > app/src/main/java/com/quranstudio/luganda/MainActivity.java <<'JAVA'
+          package com.quranstudio.luganda;
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          public class MainActivity extends Activity {
+            protected void onCreate(Bundle b) {
+              super.onCreate(b);
+              WebView w = new WebView(this);
+              WebSettings s = w.getSettings();
+              s.setJavaScriptEnabled(true);
+              s.setDomStorageEnabled(true);
+              s.setAllowFileAccess(true);
+              s.setAllowContentAccess(true);
+              w.setWebViewClient(new WebViewClient());
+              setContentView(w);
+              w.loadUrl("file:///android_asset/www/index.html");
+            }
+          }
+          JAVA
+
+          # Gradle files
+          cat > settings.gradle <<'G'
+          include ':app'
+          G
+          cat > build.gradle <<'G'
+          buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.application:com.android.application:8.2.2' } }
+          allprojects { repositories { google(); mavenCentral() } }
+          G
+          cat > app/build.gradle <<'G'
+          apply plugin: 'com.android.application'
+          android {
+            namespace 'com.quranstudio.luganda'
+            compileSdk 34
+            defaultConfig { applicationId 'com.quranstudio.luganda' minSdk 24 targetSdk 34 versionCode 1 versionName '1.0' }
+            buildTypes { release { minifyEnabled false } }
+            compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+          }
+          G
+          echo "--- YOUR FILES COPIED ---"
+          ls -R app/src/main/assets/www
 
       - name: Build APK
         run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          gradle assembleDebug --stacktrace || ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Quran-Studio-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
