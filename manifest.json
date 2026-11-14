@@ -1,0 +1,16 @@
+{
+  "name": "Quran Studio",
+  "short_name": "Quran Studio",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1E7A4C",
+  "theme_color": "#1E7A4C",
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
