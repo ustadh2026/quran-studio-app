@@ -4,167 +4,298 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Quran Studio</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231E7A4C'/%3E%3Ctext x='50' y='68' font-size='48' text-anchor='middle' fill='%23F2C94C'%3E%D8%AC%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent} html,body{height:100%}
-body{margin:0;font-family:system-ui;background:#EDEDED;color:#222;overflow:hidden;display:flex;flex-direction:column}
-/* TOP BAR - NOT STICKY, FIXED IN FLEX */
-.top{background:#1E7A4C;color:#fff;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.top b{font-size:17px} .top small{font-size:11px;opacity:.9;display:block}
-.logoBox{width:44px;height:44px;background:#F2C94C;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
-.iconBtn{background:rgba(255,255,255,.25);border:none;color:#fff;font-size:22px;width:44px;height:44px;border-radius:50%;cursor:pointer;flex-shrink:0}
-/* PREVIEW - FIXED HEIGHT, NEVER COVERS BUTTONS */
-.preview{flex-shrink:0;background:#0F0F0F;padding:10px}
-.stage{border-radius:16px;padding:16px;text-align:center;min-height:210px;color:#fff;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(45deg,#0B3D2E,#1E7A4C,#0A2E5A,#3A1C71);background-size:300% 300%;animation:grad 8s ease infinite}
-@keyframes grad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-.stage.playing{box-shadow:0 0 0 3px #F2C94C inset}
-#qArabic{font-size:27px;line-height:1.9;direction:rtl}
-#qEnglish{font-size:13px;color:#E8E8E8;margin-top:4px}
-#qAysar{font-size:13px;color:#FFE9A8;background:rgba(0,0,0,.35);padding:7px;border-radius:10px;margin-top:8px;direction:rtl}
-#qLuganda{font-size:21px;font-weight:800;color:#F2C94C;margin-top:8px}
-#qStatus{font-size:12px;color:#ddd;margin-top:8px}
-.hl.on{background:#F2C94C!important;color:#000!important;padding:5px 10px;border-radius:10px}
-#qBadge{position:absolute;top:8px;right:8px;background:#F2C94C;color:#000;padding:4px 8px;border-radius:20px;font-size:10px;font-weight:700}
-/* CONTROLS - BELOW PREVIEW, ALWAYS TOUCHABLE */
-.controls{flex-shrink:0;background:#0F0F0F;padding:0 10px 10px;display:flex;gap:8px}
-.controls button{flex:1;padding:13px;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer}
-.play{background:#1E7A4C;color:#fff} .save{background:#F2C94C} .stop{background:#333;color:#fff}
-/* SCREENS - ONLY THIS PART SCROLLS */
-.main{flex:1;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch}
-.screen{display:none} .screen.active{display:block}
-.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px}
-label{font-weight:700;font-size:13px} select,textarea,input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-top:6px;font-size:15px}
-.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.btnrow button{border:none;border-radius:20px;padding:10px 14px;cursor:pointer;font-size:14px;background:#eee}
-.btnrow button.active{background:#1E7A4C;color:#fff} .btnrow button.gold.active{background:#F2C94C;color:#000}
-.surahItem{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border:2px solid transparent}
-.surahItem:active{border-color:#1E7A4C;background:#E8F5E9}
-.ayah{background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;border:2px solid transparent}
-.ayah.active{border-color:#F2C94C;background:#FFFDE7}
-.arabicSmall{direction:rtl;font-size:18px;color:#1E7A4C}
-/* BOTTOM NAV - FIXED, ALWAYS TOUCHABLE */
-.bottomNav{flex-shrink:0;background:#fff;display:flex;border-top:1px solid #ddd}
-.bottomNav button{flex:1;border:none;background:#fff;padding:10px 2px;font-size:11px;cursor:pointer;color:#666}
-.bottomNav button.active{color:#1E7A4C;font-weight:800;border-top:3px solid #1E7A4C}
-.bottomNav span{display:block;font-size:22px}
-/* DRAWER - POINTER-EVENTS FIX - WHEN CLOSED IT CANNOT BLOCK TOUCHES */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}
-.overlay.show{display:block}
-.drawer{position:fixed;top:0;right:-300px;width:280px;height:100%;background:#fff;z-index:100;transition:right .3s;padding:16px;overflow-y:auto;pointer-events:none}
-.drawer.open{right:0;pointer-events:auto}
-.drawerItem{padding:14px 10px;border-bottom:1px solid #eee;cursor:pointer;font-size:15px}
-.drawerItem:active{background:#E8F5E9}
-.closeBtn{background:#eee;border:none;padding:8px 12px;border-radius:20px;float:right;cursor:pointer}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0B2E1F;color:#fff;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0B2E1F;border-bottom:1px solid rgba(255,255,255,.15)}
+.menuBtn{font-size:24px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;width:44px;height:44px;border-radius:12px;cursor:pointer}
+.brand{flex:1}
+.brand b{font-size:18px}
+.brand small{color:#CFF5D8;font-size:12px}
+.pill{background:#E8B84B;color:#0B2E1F;font-weight:800;font-size:12px;padding:6px 10px;border-radius:999px}
+.screen{display:none;padding:14px 14px 110px}
+.screen.active{display:block}
+.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:14px;margin-bottom:12px}
+.card h3{margin-bottom:8px}
+.muted{color:#CFF5D8;font-size:13px;line-height:1.5}
+.big{font-size:22px;line-height:1.3;font-weight:800}
+.search{width:100%;padding:13px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:#fff;color:#111;font-size:16px;outline:none;margin:10px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:#fff;color:#111;border-radius:16px;padding:14px;cursor:pointer}
+.tile b{font-size:16px}
+.tile small{color:#555}
+.tile .num{font-size:28px;font-weight:900;color:#1E7A4C}
+.btn{border:0;border-radius:14px;padding:13px 14px;font-weight:800;font-size:15px;cursor:pointer;width:100%}
+.btnGold{background:#E8B84B;color:#111}
+.btnGreen{background:#1E7A4C;color:#fff}
+.btnDark{background:#111;color:#fff}
+.btnGhost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.row{display:flex;gap:10px}
+.row .btn{flex:1}
+select,input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-size:15px;color:#111}
+label{font-size:13px;color:#CFF5D8;display:block;margin:10px 0 6px}
+.ayah{background:#fff;color:#111;border-radius:16px;padding:14px;margin-bottom:10px;border-left:6px solid #E8B84B}
+.ayah.active{border-left-color:#1E7A4C;outline:3px solid #E8B84B}
+.ayah .ar{font-size:26px;line-height:1.9;text-align:right;direction:rtl}
+.ayah .en{color:#444;margin-top:8px;line-height:1.5}
+.ayah .lug{color:#1E7A4C;font-weight:700;margin-top:6px}
+.mini{font-size:12px;padding:7px 10px;border-radius:999px;border:0;font-weight:800;cursor:pointer}
+.mini.g{background:#1E7A4C;color:#fff}.mini.y{background:#E8B84B;color:#111}.mini.d{background:#111;color:#fff}.mini.r{background:#C0392B;color:#fff}
+.bottomNav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#071F14;border-top:1px solid rgba(255,255,255,.15);display:flex;padding:8px}
+.navBtn{flex:1;background:transparent;border:0;color:#CFF5D8;font-size:12px;cursor:pointer;padding:6px 2px}
+.navBtn b{display:block;font-size:20px}
+.navBtn.active{color:#E8B84B}
+.stage{border-radius:20px;padding:16px;background:linear-gradient(135deg,#1E7A4C,#0B2E1F);border:1px solid rgba(255,255,255,.2)}
+.stage.playing{outline:3px solid #E8B84B}
+.stage .ar{font-size:30px;line-height:1.9;text-align:right;direction:rtl}
+.drawer{position:fixed;inset:0;z-index:50;display:none}
+.drawer.open{display:block}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+.panel{position:absolute;left:0;top:0;bottom:0;width:82%;max-width:320px;background:#0B2E1F;padding:16px;overflow:auto}
+.drawerItem{display:block;width:100%;text-align:left;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:13px;border-radius:12px;margin-bottom:8px;font-size:15px;cursor:pointer}
+.chip{padding:9px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;cursor:pointer}
+.chip.on{background:#E8B84B;color:#111;font-weight:800}
+.voiceCard{background:#fff;color:#111;border-radius:14px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 </style>
 </head>
 <body>
-<div class="top">
-<div style="display:flex;gap:10px;align-items:center"><div class="logoBox">📖</div><div><b>Quran Studio</b><small>Phone Only • No Firebase ✅ • Icon in Code</small></div></div>
-<button class="iconBtn" id="menuBtn">☰</button>
+
+<div class="topbar">
+<button class="menuBtn" id="menuBtn">☰</button>
+<div class="brand"><b>Quran Studio</b><br><small>Al-Quran • Luganda • Aysar • Video Studio</small></div>
+<span class="pill">UGANDA 🇺🇬</span>
 </div>
 
-<div class="preview">
-<div class="stage" id="stage">
-<div id="qBadge">QURAN STUDIO • LUGANDA • AYSAR</div>
-<div><span id="qArabic" class="hl">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span></div>
-<div id="qEnglish">In the name of Allah, the Most Gracious, the Most Merciful</div>
-<div><span id="qAysar" class="hl">أيسر التفسير: بسم الله الرحمن الرحيم...</span></div>
-<div><span id="qLuganda" class="hl">Mu linnya lya Allah...</span></div>
-<div id="qStatus">Ready - Tap any Reciter to hear him now</div>
-</div>
-</div>
-
-<div class="controls">
-<button class="play" id="btnPreview">▶️ Preview</button>
-<button class="save" id="btnVideo">💾 Video</button>
-<button class="stop" id="btnStop">⏹️ Stop</button>
-</div>
-
-<div class="main" id="mainScroll">
-<div id="screen-home" class="screen active">
-<div class="card"><h3 style="margin:0">🏠 Home — All Surahs</h3><p style="color:#666;font-size:13px">Tap a Surah → It opens. Preview stays on top.</p>
-<input id="searchSurah" placeholder="🔍 Search Surah... e.g. Yasin" autocomplete="off">
-<button onclick="testTouch()" style="margin-top:8px;width:100%;padding:10px;background:#E8F5E9;border:1px solid #1E7A4C;border-radius:10px">👆 Test Touch - Tap Me</button>
-<p id="testMsg" style="text-align:center;color:#1E7A4C;font-weight:700"></p></div>
-<div id="surahList"><p style="text-align:center;color:#888">Loading Surahs...</p></div>
-</div>
-
-<div id="screen-surah" class="screen">
-<div class="card">
-<label>Now Playing Surah</label><select id="surahSel"></select>
-<label style="display:block;margin-top:12px">Reciter (25) — Tap to Hear Instantly 🔊</label>
-<p style="font-size:12px;color:#1E7A4C">Tap any reciter, he starts now even if Luganda not typed yet.</p>
-<div class="btnrow" id="reciterRow"></div>
-<label style="display:block;margin-top:12px">Play Mode</label>
-<div class="btnrow"><button id="modeAyah" class="active">▶️ 1 Ayah + Translate</button><button id="modeFull">📖 Full Surah Then Translate</button></div>
-</div>
-<div class="card"><h3 style="margin:0">✍️ Working Screen — Type Luganda + Aysar + Record</h3><div id="ayahList"></div></div>
-</div>
-
-<div id="screen-voice" class="screen">
-<div class="card"><label>Luganda Voice</label><div class="btnrow">
-<button id="vReal" class="gold active">🎙️ Real Voice</button><button id="vClone" class="gold">👤 Clone Voice</button><button id="vRobot" class="gold">🤖 Robot Voice</button></div>
-<div style="background:#FFF8E1;border-radius:10px;padding:10px;margin-top:10px"><b>Clone Voices:</b><div class="btnrow" id="voiceRow"></div><button id="btnAddVoice" style="background:#1E7A4C;color:#fff;border:none;padding:9px 14px;border-radius:20px">+ Add New Voice</button></div></div>
-<div class="card"><label>Video Background</label><div class="btnrow" id="bgRow">
-<button data-bg="bg-none">⬛ Black</button><button data-bg="bg-anim" class="active">✨ Animated</button><button data-bg="bg-nature">🏔️ Mountain</button><button data-bg="bg-forest">🌲 Forest</button><button data-bg="bg-ocean">🌊 Ocean</button><button data-bg="bg-masjid">🕌 Masjid</button><button data-bg="bg-kaaba">🕋 Kaaba</button><button data-bg="bg-quran">📖 Quran</button></div></div>
-</div>
-
-<div id="screen-save" class="screen">
-<div class="card"><h3 style="margin:0">💾 Save</h3>
-<button id="btnSaveVideo" style="width:100%;padding:14px;background:#F2C94C;border:none;border-radius:12px;font-weight:700;margin-bottom:10px">💾 Save Video MP4</button>
-<button id="btnSaveAudio" style="width:100%;padding:14px;background:#333;color:#fff;border:none;border-radius:12px;font-weight:700">🎵 Save Audio MP3</button>
-<p id="saveStatus" style="color:green;text-align:center"></p></div>
-<div class="card"><h3 style="margin:0">ℹ️ About</h3><p style="font-size:13px;color:#666">114 Surahs • 25 Reciters • Aysar • Luganda • Phone Only. Tap Reciter = Play. Highlight moves.</p></div>
-</div>
-</div>
-
-<div class="bottomNav">
-<button id="nav-home" class="active"><span>🏠</span>Home</button>
-<button id="nav-surah"><span>📖</span>Surah</button>
-<button id="nav-voice"><span>🎙️</span>Voice & BG</button>
-<button id="nav-save"><span>💾</span>Save</button>
-</div>
-
+<div class="drawer" id="drawer">
 <div class="overlay" id="overlay"></div>
-<div class="drawer" id="drawer"><button class="closeBtn" id="closeDrawerBtn">✕ Close</button><h3>☰ Menu</h3>
-<div class="drawerItem" data-go="home">🏠 Home - All Surahs</div>
-<div class="drawerItem" data-go="surah">📖 Open Surah / Studio</div>
-<div class="drawerItem" data-go="voice">🎙️ Voices & Backgrounds</div>
-<div class="drawerItem" data-go="save">💾 Save Video / Audio</div>
-<div class="drawerItem" id="drawerPreview">▶️ Preview Now</div>
-<div class="drawerItem" id="drawerStop">⏹️ Stop</div>
-<div style="background:#E8F5E9;padding:10px;border-radius:10px;margin-top:12px;font-size:12px;color:#1E7A4C"><b>✅ Phone Only Mode</b><br>No Firebase • No Login</div></div>
+<div class="panel">
+<h2 style="margin-bottom:12px">☰ Menu</h2>
+<button class="drawerItem" data-go="home">🏠 Home</button>
+<button class="drawerItem" data-go="surah">📖 Surah</button>
+<button class="drawerItem" data-go="voice">🎤 Voice</button>
+<button class="drawerItem" data-go="save">💾 Save</button>
+<button class="drawerItem" id="drawerPreview">▶️ Preview</button>
+<button class="drawerItem" id="drawerStop">⏹ Stop</button>
+<button class="drawerItem" id="closeDrawerBtn">❌ Close</button>
+<p class="muted" style="margin-top:10px">Quran Studio v1.0<br>Made for Uganda</p>
+</div>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="scr-home">
+<div class="card"><h3>Assalamu Alaikum 👋</h3><p class="muted">Listen, Read, Translate to Luganda, Record your own voice, Save as Video.</p>
+<div style="margin-top:12px" class="row"><button class="btn btnGold" onclick="showScreen('surah')">📖 Open Quran</button><button class="btn btnGreen" onclick="previewQuran()">▶️ Preview</button></div>
+<button class="btn btnGhost" style="margin-top:10px" onclick="document.getElementById('testResult').innerText='✅ Touch Works! JavaScript is ON';alert('✅ Touch Works!')">🧪 Test Touch - Tap Me</button>
+<p id="testResult" style="margin-top:10px;color:#E8B84B;font-weight:800"></p>
+</div>
+<div class="card"><h3>🔍 Search Surah</h3><input class="search" id="searchSurah" placeholder="Search Al-Fatiha, Yasin, Al-Kahf..."><div id="surahList"></div></div>
+<div class="card"><h3>⭐ Quick Surahs</h3><div class="grid">
+<div class="tile" onclick="openSurah(1)"><div class="num">1</div><b>Al-Fatiha</b><br><small>7 Ayahs</small></div>
+<div class="tile" onclick="openSurah(36)"><div class="num">36</div><b>Ya-Sin</b><br><small>83 Ayahs</small></div>
+<div class="tile" onclick="openSurah(18)"><div class="num">18</div><b>Al-Kahf</b><br><small>110 Ayahs</small></div>
+<div class="tile" onclick="openSurah(67)"><div class="num">67</div><b>Al-Mulk</b><br><small>30 Ayahs</small></div>
+</div></div>
+</div>
+
+<!-- SURAH -->
+<div class="screen" id="scr-surah">
+<div class="card"><h3>📖 Surah Player</h3>
+<label>Surah</label><select id="surahSel"></select>
+<div class="row" style="margin-top:10px"><button class="chip on" id="modeAyah">Ayah Mode</button><button class="chip" id="modeFull">Full Surah</button></div>
+<div class="row" style="margin-top:10px"><button class="chip on" id="vReal">🎤 Real Voice</button><button class="chip" id="vClone">🧬 Clone</button><button class="chip" id="vRobot">🤖 Robot</button></div>
+<label>Reciter (Arabic)</label><select id="reciterSel"></select>
+<label>Background</label><div class="row" id="bgRow"><button class="chip on" data-bg="green">🟢 Green</button><button class="chip" data-bg="gold">🟡 Gold</button><button class="chip" data-bg="black">⚫ Black</button></div>
+</div>
+<div class="stage card" id="stage"><div id="qStatus" style="color:#E8B84B;font-weight:800">Ready</div><div class="ar" id="qArabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div><p id="qEnglish" style="margin-top:10px">In the name of Allah, the Most Gracious, the Most Merciful.</p><p id="qAysar" style="margin-top:8px;color:#FFE9A8">أيسر التفسير: ...</p><p id="qLuganda" style="margin-top:8px;font-weight:800">Mu linnya lya Allah...</p>
+<div class="row" style="margin-top:12px"><button class="btn btnGold" id="btnPreview">▶️ Preview</button><button class="btn btnDark" id="btnStop">⏹ Stop</button><button class="btn btnGreen" id="btnVideo">🎬 Video</button></div></div>
+<div id="ayahList"></div>
+</div>
+
+<!-- VOICE -->
+<div class="screen" id="scr-voice">
+<div class="card"><h3>🎤 My Voices</h3><p class="muted">Record your Luganda voice, use it for any Ayah.</p><button class="btn btnGold" id="btnAddVoice" style="margin-top:10px">➕ Add New Voice</button><div id="voiceList" style="margin-top:12px"></div></div>
+<div class="card"><h3>How to record</h3><p class="muted">1. Go to Surah → Tap 🎤 on any Ayah<br>2. Speak Luganda translation<br>3. It saves automatically<br>4. Play it anytime</p></div>
+</div>
+
+<!-- SAVE -->
+<div class="screen" id="scr-save">
+<div class="card"><h3>💾 Save Video / Audio</h3><p class="muted">Save your Quran video to share on WhatsApp, TikTok, YouTube.</p>
+<div style="margin-top:12px" class="row"><button class="btn btnGold" id="btnSaveVideo">🎬 Save Video</button><button class="btn btnGreen" id="btnSaveAudio">🎵 Save Audio</button></div>
+<p id="saveStatus" style="margin-top:12px;color:#E8B84B;font-weight:800"></p>
+<p class="muted" style="margin-top:10px">Tip: Use Android Screen Record while Preview is playing for best video quality.</p></div>
+</div>
+
+<nav class="bottomNav">
+<button class="navBtn active" id="nav-home"><b>🏠</b>Home</button>
+<button class="navBtn" id="nav-surah"><b>📖</b>Surah</button>
+<button class="navBtn" id="nav-voice"><b>🎤</b>Voice</button>
+<button class="navBtn" id="nav-save"><b>💾</b>Save</button>
+</nav>
 
 <script>
-function testTouch(){ document.getElementById('testMsg').innerText='✅ Touch Works! Now tap a Surah below.'; }
-window.surah=1; window.ayahs=[]; window.reciter='ar.abdulrahmanalsudais'; window.playMode='ayah'; window.lugMode='real'; window.voiceId='voice_jemba'; window.stopped=false; window.currentAudio=null;
-let surahNames=["Al-Fatiha","Al-Baqarah","Aal-e-Imran","An-Nisa","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Tawbah","Yunus","Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Taha","Al-Anbiya","Al-Hajj","Al-Mu'minun","An-Nur","Al-Furqan","Ash-Shu'ara","An-Naml","Al-Qasas","Al-Ankabut","Ar-Rum","Luqman","As-Sajdah","Al-Ahzab","Saba","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir","Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiyah","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf","Adh-Dhariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqi'ah","Al-Hadid","Al-Mujadila","Al-Hashr","Al-Mumtahanah","As-Saff","Al-Jumu'ah","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqah","Al-Ma'arij","Nuh","Al-Jinn","Al-Muzzammil","Al-Muddaththir","Al-Qiyamah","Al-Insan","Al-Mursalat","An-Naba","An-Nazi'at","Abasa","At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-A'la","Al-Ghashiyah","Al-Fajr","Al-Balad","Ash-Shams","Al-Layl","Ad-Duha","Ash-Sharh","At-Tin","Al-Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-Adiyat","Al-Qari'ah","At-Takathur","Al-Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr","Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"];
-let surahCounts=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
-let sel=document.getElementById('surahSel'); surahNames.forEach((n,i)=>{ let o=document.createElement('option'); o.value=i+1; o.text=(i+1)+' - '+n+' ('+surahCounts[i]+')'; sel.appendChild(o); });
-window.reciters=[{id:'ar.abdulrahmanalsudais',name:'1. Sudais ❤️'},{id:'ar.saoodshuraym',name:'2. Shuraim ❤️'},{id:'ar.alafasy',name:'3. Mishary Alafasy'},{id:'ar.abdulbasitmurattal',name:'4. AbdulBasit'},{id:'ar.husary',name:'5. Husary'},{id:'ar.husarymujawwad',name:'6. Husary Mujawwad'},{id:'ar.mahermuaiqly',name:'7. Maher'},{id:'ar.aymanswoaid',name:'8. Saad Al-Ghamdi'},{id:'ar.minshawi',name:'9. Minshawi'},{id:'ar.hudhaify',name:'10. Hudhaify'},{id:'ar.abdullahawadaljuhany',name:'11. Al-Juhany'},{id:'ar.abdullahbasfar',name:'12. Basfar'},{id:'ar.abdullahmatrood',name:'13. Matrood'},{id:'ar.abdulsamad',name:'14. AbdulSamad'},{id:'ar.azizalili',name:'15. Aziz Alili'},{id:'ar.hanirifai',name:'16. Hani Rifai'},{id:'ar.ibrahimalkhayat',name:'17. Ibrahim Khayat'},{id:'ar.muhammadayyoub',name:'18. Muhammad Ayyoub'},{id:'ar.muhammadjibreel',name:'19. Muhammad Jibreel'},{id:'ar.parhizgar',name:'20. Parhizgar'},{id:'ar.shaatree',name:'21. Al-Shatri'},{id:'ar.ahmedibntalib',name:'22. Ahmed Ibn Talib'},{id:'ar.abdulrahmanalsudais2',name:'23. Sudais Slow'},{id:'ar.abdulbasitmurattal2',name:'24. AbdulBasit Slow'},{id:'ar.husarymujawwad2',name:'25. Husary Slow'}];
-window.voices=JSON.parse(localStorage.getItem('qs_voices')||'[]'); if(!window.voices.length){ window.voices=[{id:'voice_jemba',name:'Jemba (You)'}]; localStorage.setItem('qs_voices',JSON.stringify(window.voices)); }
-function showScreen(name){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById('screen-'+name).classList.add('active'); document.querySelectorAll('.bottomNav button').forEach(b=>b.classList.remove('active')); document.getElementById('nav-'+name).classList.add('active'); document.getElementById('mainScroll').scrollTop=0; }
-function openDrawer(){ document.getElementById('drawer').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
-function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
-function renderSurahList(){ let q=(document.getElementById('searchSurah').value||'').toLowerCase().trim(); let html=''; surahNames.forEach((n,i)=>{ if(q && !n.toLowerCase().includes(q) && String(i+1)!==q) return; html+='<div class="surahItem" data-surah="'+(i+1)+'"><div><b>'+(i+1)+'. '+n+'</b><br><small>'+surahCounts[i]+' Ayahs • Tap to Open</small></div><div style="font-size:22px">›</div></div>'; }); document.getElementById('surahList').innerHTML=html||'<p style="text-align:center;color:#888">No Surah found - clear search</p>'; document.querySelectorAll('.surahItem').forEach(el=>{ el.addEventListener('click',()=>{ openSurah(parseInt(el.getAttribute('data-surah'))); }); }); }
-function openSurah(num){ window.surah=num; document.getElementById('surahSel').value=num; showScreen('surah'); loadSurah(); }
-function renderReciters(){ document.getElementById('reciterRow').innerHTML=window.reciters.map(r=>'<button data-rec="'+r.id+'" class="'+(window.reciter===r.id?'active':'')+'">▶️ '+r.name+'</button>').join(''); document.querySelectorAll('#reciterRow button').forEach(b=>{ b.addEventListener('click',()=>setReciter(b.getAttribute('data-rec'))); }); }
-function renderVoices(){ document.getElementById('voiceRow').innerHTML=window.voices.map(v=>'<button data-v="'+v.id+'" class="'+(window.voiceId===v.id?'active':'')+'">'+v.name+'</button>').join(''); document.querySelectorAll('#voiceRow button').forEach(b=>{ b.addEventListener('click',()=>{ window.voiceId=b.getAttribute('data-v'); renderVoices(); }); }); }
-async function setReciter(id){ stopAll(); window.reciter=id; renderReciters(); await loadSurah(); previewQuran(); }
-function setMode(m){ window.playMode=m; document.getElementById('modeAyah').className=m==='ayah'?'active':''; document.getElementById('modeFull').className=m==='full'?'active':''; }
-function setLugMode(m){ window.lugMode=m; document.getElementById('vReal').className='gold '+(m==='real'?'active':''); document.getElementById('vClone').className='gold '+(m==='clone'?'active':''); document.getElementById('vRobot').className='gold '+(m==='robot'?'active':''); }
-function setBg(c){ document.getElementById('stage').className='stage '+c; document.querySelectorAll('#bgRow button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-bg')===c)); }
-async function loadSurah(){
-window.surah=document.getElementById('surahSel').value;
-document.getElementById('qStatus').innerText='Loading Surah '+window.surah+'...';
-try{ let res=await fetch('https://api.alquran.cloud/v1/surah/'+window.surah+'/editions/quran-uthmani,en.asad,'+window.reciter); let j=await res.json(); let ar=j.data[0].ayahs, en=j.data[1].ayahs, au=j.data[2].ayahs; window.ayahs=ar.map((a,i)=>({num:a.numberInSurah, arabic:a.text, english:en[i].text, audio:au[i].audio, luganda:localStorage.getItem('lug_'+window.surah+'_'+a.numberInSurah)||'', aysar:localStorage.getItem('aysar_'+window.surah+'_'+a.numberInSurah)||'', real:localStorage.getItem('lugAud_'+window.surah+'_'+a.numberInSurah)||''})); }catch(e){ window.ayahs=[{num:1,arabic:'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',english:'In the name of Allah...',audio:'',luganda:'',aysar:'',real:''}]; }
-document.getElementById('ayahList').innerHTML=window.ayahs.map(a=>'<div class="ayah" id="ayahCard_'+a.num+'"><b>Ayah '+a.num+' — Tap to Play ▶️</b><div class="arabicSmall">'+a.arabic+'</div><small style="color:#888">'+a.english+'</small><div style="margin-top:6px;color:#B77900;font-weight:700">🇺🇬 '+(a.luganda||'— Luganda not yet typed —')+'</div><label style="display:block;margin-top:8px">📚 أيسر التفسير:</label><textarea id="aysar_'+a.num+'" placeholder="Paste Aysar here...">'+a.aysar+'</textarea><label style="display:block;margin-top:8px">🇺🇬 Luganda:</label><textarea id="lug_'+a.num+'" placeholder="Type Luganda here...">'+a.luganda+'</textarea><div class="btnrow"><button data-save="'+a.num+'" style="background:#1E7A4C;color:#fff">💾 Save</button><button data-rec="'+a.num+'" style="background:#FFE0E0">🎙️ Record</button><button data-play="'+a.num+'" style="background:#E8F5E9">▶️ Play Real</button></div>'+(a.real?'<small style="color:green">✅ Real Voice Saved</small>':'')+'</div>').join('');
-document.querySelectorAll('.ayah').forEach(card=>{ card.addEventListener('click',(e)=>{ if(e.target.tagName==='TEXTAREA'||e.target.tagName==='BUTTON') return; let n=parseInt(card.id.replace('ayahCard_','')); playSingleAyah(n); }); });
-document.querySelectorAll('[data-save]').forEach(b=>b.addEventListener('click',(e)=>{ e.stopPropagation(); saveAll(parseInt(b.getAttribute('data-save'))); }));
-document.querySelectorAll('[data-rec]').forEach(b=>b.addEventListener('click',(e)=>{ e.stopPropagation(); recordReal(parseInt(b.getAttribute('data-rec'))); }));
-document.querySelectorAll('[data-play]').forEach(b=>b.addEventListener('click',(e)=>{ e.stopPropagation(); playReal(parseInt(b.getAttribute('data-play'))); }));
-document.getElementById('qStatus').innerText='Loaded '+window.ayahs.length+' Ayahs - Tap Reciter to Hear Now';
+let window_ayahs = [];
+window.ayahs = [];
+window.surah = 1;
+window.playMode = 'ayah';
+window.lugMode = 'real';
+window.stopped = false;
+window.currentAudio = null;
+window.voices = JSON.parse(localStorage.getItem('qs_voices')||'[{"id":"me","name":"My Voice"}]');
+let rec=null, chunks=[];
+
+const SURAHS = [
+{no:1,name:'Al-Fatiha',ayahs:7},{no:2,name:'Al-Baqarah',ayahs:286},{no:3,name:'Aal-E-Imran',ayahs:200},{no:18,name:'Al-Kahf',ayahs:110},{no:36,name:'Ya-Sin',ayahs:83},{no:55,name:'Ar-Rahman',ayahs:78},{no:56,name:'Al-Waqiah',ayahs:96},{no:67,name:'Al-Mulk',ayahs:30},{no:78,name:'An-Naba',ayahs:40},{no:112,name:'Al-Ikhlas',ayahs:4},{no:113,name:'Al-Falaq',ayahs:5},{no:114,name:'An-Nas',ayahs:6}
+];
+const RECITERS = [
+{ id:'ar.alafasy', name:'Mishary Alafasy' },
+{ id:'ar.abdulbasitmurattal', name:'AbdulBasit' },
+{ id:'ar.aymanswoaid', name:'Ayman Swoaid' },
+{ id:'ar.husary', name:'Mahmoud Al-Husary' }
+];
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('scr-'+name).classList.add('active');
+  document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));
+  let map={home:'nav-home',surah:'nav-surah',voice:'nav-voice',save:'nav-save'};
+  if(map[name]) document.getElementById(map[name]).classList.add('active');
+  window.scrollTo(0,0);
 }
-function saveAll(n){ let lug=document.getElementById('lug_'+n).value; let ays=document.getElementById('aysar_'+n).value; localStorage.setItem('lug_'+window.surah+'_'+n,lug); localStorage.setItem('aysar_'+window.surah+'_'+n,ays); let ay=window.ayahs.find(x=>x.num===n); if(ay){ ay.luganda=lug; ay.aysar=ays; } alert('Saved Ayah '+n+' ✅'); }
-let rec, chunks=[];
-async function recordReal(n){ let s=await navigator.mediaDevices.getUserMedia({audio:true}); rec=new MediaRecorder(s); chunks=[]; rec.ondataavailable=e=>chunks.push(e.data); rec.onstop=()=>{ let b=new Blob(chunks,{type:'audio/webm'}); let r=new FileReader(); r.onload=()=>{ localStorage.setItem('lugAud_'+window.surah+'_'+n, r.result); loadSurah(); alert('Real Voice Saved Ayah '+n+'!'); }; r.readAsDataURL(b); }; rec.start(); alert('Recording Ayah
+function openDrawer(){ document.getElementById('drawer').classList.add('open'); }
+function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); }
+function setMode(m){ window.playMode=m; document.getElementById('modeAyah').classList.toggle('on', m==='ayah'); document.getElementById('modeFull').classList.toggle('on', m==='full'); }
+function setLugMode(m){ window.lugMode=m; ['vReal','vClone','vRobot'].forEach(id=>document.getElementById(id).classList.remove('on')); document.getElementById(m==='real'?'vReal':m==='clone'?'vClone':'vRobot').classList.add('on'); }
+function setBg(bg){
+  let st=document.getElementById('stage');
+  if(bg==='green') st.style.background='linear-gradient(135deg,#1E7A4C,#0B2E1F)';
+  if(bg==='gold') st.style.background='linear-gradient(135deg,#E8B84B,#B8860B)';
+  if(bg==='black') st.style.background='linear-gradient(135deg,#111,#000)';
+  document.querySelectorAll('#bgRow button').forEach(b=>b.classList.toggle('on', b.getAttribute('data-bg')===bg));
+}
+function renderSurahList(){
+  let q=(document.getElementById('searchSurah').value||'').toLowerCase();
+  let list=SURAHS.filter(s=>s.name.toLowerCase().includes(q) || String(s.no)===q);
+  document.getElementById('surahList').innerHTML = list.map(s=>'<div class="tile" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px" onclick="openSurah('+s.no+')"><div><b>'+s.no+'. '+s.name+'</b><br><small>'+s.ayahs+' Ayahs</small></div><span style="font-size:22px">▶️</span></div>').join('') || '<p class="muted">No Surah found</p>';
+  let sel=document.getElementById('surahSel');
+  if(!sel.options.length){ sel.innerHTML=SURAHS.map(s=>'<option value="'+s.no+'">'+s.no+'. '+s.name+'</option>').join(''); }
+}
+function renderReciters(){
+  document.getElementById('reciterSel').innerHTML = RECITERS.map(r=>'<option value="'+r.id+'">'+r.name+'</option>').join('');
+}
+function renderVoices(){
+  document.getElementById('voiceList').innerHTML = window.voices.map(v=>'<div class="voiceCard"><b>🎤 '+v.name+'</b><button class="mini g" onclick="alert(\'Voice '+v.name+' selected\')">Use</button></div>').join('');
+}
+function openSurah(no){
+  window.surah=no;
+  document.getElementById('surahSel').value=no;
+  showScreen('surah');
+  loadSurah();
+}
+async function loadSurah(){
+  let no = parseInt(document.getElementById('surahSel').value||window.surah||1);
+  window.surah=no;
+  document.getElementById('qStatus').innerText='Loading Surah '+no+'...';
+  document.getElementById('ayahList').innerHTML='<p class="muted">Loading Surahs... Please wait, fetching from Quran API...</p>';
+  try{
+    let recId=document.getElementById('reciterSel').value||'ar.alafasy';
+    let res=await fetch('https://api.alquran.cloud/v1/surah/'+no+'/editions/quran-uthmani,en.asad,'+recId);
+    let j=await res.json();
+    let ar=j.data[0].ayahs, en=j.data[1].ayahs, au=j.data[2].ayahs;
+    window.ayahs = ar.map((a,i)=>({num:a.numberInSurah, arabic:a.text, english:en[i]?en[i].text:'', audio:au[i]?au[i].audio:'', luganda:'Mu linnya lya Allah, Omusaasizi, Omukwatampola.', aysar:'أيسر التفسير: '+ (en[i]?en[i].text:'') }));
+  }catch(e){
+    window.ayahs = [{num:1,arabic:'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',english:'In the name of Allah, the Most Gracious, the Most Merciful.',audio:'',luganda:'Mu linnya lya Allah.',aysar:'أيسر التفسير: ...'}];
+    document.getElementById('qStatus').innerText='Offline Mode - Showing Al-Fatiha Ayah 1 (Check Internet)';
+  }
+  document.getElementById('qStatus').innerText='Surah '+no+' Loaded - '+window.ayahs.length+' Ayahs ✅ Tap any Ayah to Play';
+  document.getElementById('ayahList').innerHTML = window.ayahs.map(a=>'<div class="ayah" id="ayahCard_'+a.num+'"><div style="display:flex;justify-content:space-between"><b>Ayah '+a.num+'</b><span>🎧</span></div><div class="ar">'+a.arabic+'</div><div class="en">'+a.english+'</div><div class="lug">🇺🇬 Luganda: '+a.luganda+'</div><div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button class="mini g" onclick="playSingleAyah('+a.num+')">▶️ Play</button><button class="mini y" onclick="recordReal('+a.num+')">🎤 Record Real</button><button class="mini r" onclick="playReal('+a.num+')">🔊 Play Real</button><button class="mini d" onclick="alert(\'Clone Voice coming\')">🧬 Clone</button></div></div>').join('');
+}
+async function recordReal(n){
+  try{
+    let s = await navigator.mediaDevices.getUserMedia({audio:true});
+    rec = new MediaRecorder(s); chunks=[];
+    rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = ()=>{
+      let b = new Blob(chunks,{type:'audio/webm'});
+      let r = new FileReader();
+      r.onload = ()=>{ localStorage.setItem('lugAud_'+window.surah+'_'+n, r.result); loadSurah(); alert('Real Voice Saved Ayah '+n+'!'); };
+      r.readAsDataURL(b);
+    };
+    rec.start();
+    alert('Recording Ayah '+n+'... Will stop after 10 seconds');
+    setTimeout(()=>{ if(rec && rec.state==='recording') rec.stop(); }, 10000);
+  }catch(e){ alert('Mic blocked - Allow microphone permission'); }
+}
+function stopAll(){
+  window.stopped = true;
+  if(window.currentAudio){ try{window.currentAudio.pause();}catch(e){} window.currentAudio=null; }
+  if(rec && rec.state==='recording'){ try{rec.stop();}catch(e){} }
+  document.getElementById('qStatus').innerText = 'Stopped';
+  document.getElementById('stage').classList.remove('playing');
+}
+function playSingleAyah(n){
+  let ay = window.ayahs.find(x=>x.num===n);
+  if(!ay) return;
+  document.getElementById('qArabic').innerText = ay.arabic;
+  document.getElementById('qEnglish').innerText = ay.english;
+  document.getElementById('qAysar').innerText = ay.aysar || 'أيسر التفسير: ...';
+  document.getElementById('qLuganda').innerText = ay.luganda || 'Mu linnya lya Allah...';
+  document.querySelectorAll('.ayah').forEach(c=>c.classList.remove('active'));
+  let card = document.getElementById('ayahCard_'+n);
+  if(card) card.classList.add('active');
+  previewQuran(n);
+}
+function previewQuran(startNum){
+  stopAll(); window.stopped = false;
+  let list = window.ayahs.length ? window.ayahs : [{num:1, arabic:'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', english:'In the name of Allah...', audio:'', luganda:'', aysar:''}];
+  let idx = 0;
+  if(startNum){ let f = list.findIndex(x=>x.num===startNum); if(f>=0) idx=f; }
+  function playNext(){
+    if(window.stopped || idx>=list.length){ document.getElementById('qStatus').innerText='Finished'; return; }
+    let ay = list[idx];
+    document.getElementById('qArabic').innerText = ay.arabic;
+    document.getElementById('qEnglish').innerText = ay.english;
+    document.getElementById('qAysar').innerText = ay.aysar || 'أيسر التفسير: ...';
+    document.getElementById('qLuganda').innerText = ay.luganda || 'Mu linnya lya Allah...';
+    document.getElementById('qStatus').innerText = 'Playing Ayah '+ay.num+'...';
+    document.getElementById('stage').classList.add('playing');
+    if(ay.audio){
+      let a = new Audio(ay.audio); window.currentAudio=a;
+      a.onended = ()=>{ idx++; playNext(); };
+      a.play().catch(()=>{ idx++; playNext(); });
+    } else {
+      setTimeout(()=>{ idx++; playNext(); }, 2000);
+    }
+  }
+  playNext();
+}
+function playReal(n){
+  let url = localStorage.getItem('lugAud_'+window.surah+'_'+n);
+  if(!url) return alert('No Real Voice saved yet for Ayah '+n);
+  let a = new Audio(url); window.currentAudio=a; a.play();
+}
+
+// ===== WIRING =====
+document.getElementById('menuBtn').addEventListener('click', openDrawer);
+document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
+document.getElementById('overlay').addEventListener('click', closeDrawer);
+document.getElementById('nav-home').addEventListener('click', ()=>showScreen('home'));
+document.getElementById('nav-surah').addEventListener('click', ()=>showScreen('surah'));
+document.getElementById('nav-voice').addEventListener('click', ()=>showScreen('voice'));
+document.getElementById('nav-save').addEventListener('click', ()=>showScreen('save'));
+document.getElementById('btnPreview').addEventListener('click', ()=>previewQuran());
+document.getElementById('btnStop').addEventListener('click', stopAll);
+document.getElementById('btnVideo').addEventListener('click', ()=>{ alert('Video Save - Go to Save tab'); showScreen('save'); });
+document.getElementById('surahSel').addEventListener('change', loadSurah);
+document.getElementById('searchSurah').addEventListener('input', renderSurahList);
+document.getElementById('modeAyah').addEventListener('click', ()=>setMode('ayah'));
+document.getElementById('modeFull').addEventListener('click', ()=>setMode('full'));
+document.getElementById('vReal').addEventListener('click', ()=>setLugMode('real'));
+document.getElementById('vClone').addEventListener('click', ()=>setLugMode('clone'));
+document.getElementById('vRobot').addEventListener('click', ()=>setLugMode('robot'));
+document.getElementById('btnAddVoice').addEventListener('click', ()=>{
+  let n = prompt('New Voice Name?');
+  if(!n) return;
+  window.voices.push({id:'voice_'+Date.now(), name:n});
+  localStorage.setItem('qs_voices', JSON.stringif
