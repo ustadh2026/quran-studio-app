@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Install deps
         run: npm install
@@ -44,9 +44,6 @@ jobs:
           npx cap sync android
 
       - name: Build APK
-        env:
-          ANDROID_HOME: /usr/lib/android-sdk
-          ANDROID_SDK_ROOT: /usr/lib/android-sdk
         run: |
           cd android
           chmod +x gradlew
