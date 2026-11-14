@@ -32,6 +32,12 @@ jobs:
           node -e "const sharp=require('sharp'); sharp('assets/icon.svg').png().toFile('assets/icon.png').then(()=>console.log('icon.png made'))"
           npx @capacitor/assets generate --iconBackgroundColor '#1E7A4C' --iconBackgroundColorDark '#1E7A4C' --splashBackgroundColor '#1E7A4C' --splashBackgroundColorDark '#1E7A4C'
 
+      - name: Prepare www folder
+        run: |
+          mkdir -p www
+          cp index.html www/index.html || true
+          cp -r assets www/assets || true
+
       - name: Add + Sync Capacitor Android
         run: |
           npx cap add android || true
